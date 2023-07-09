@@ -2,7 +2,7 @@ module.exports =
 [
   {
     dish_id: 1,
-    dish_name: "Chicken Biryani",
+    dish_name: "biryani",
     description: "A flavorful rice dish made with aromatic spices and tender chicken.",
     total_price: 12.99,
     preparation_time: '45',

@@ -1,12 +1,7 @@
 const db = require("../connection");
 const format = require("pg-format");
 
-const seed = ({
-  dishData,
-  ingredientsData,
-  userData,
-  ingredientsDataJunction,
-}) => {
+const seed = ({ dishData, ingredientsData, userData, ingredientsDataJunction }) => {
   return db
     .query(`DROP TABLE IF EXISTS comments;`)
     .then(() => {
@@ -27,26 +22,16 @@ const seed = ({
           total_price NUMERIC (5,2),
           preparation_time VARCHAR(20) NOT NULL,
           calories_per_serving INTEGER,
-          image_url VARCHAR(200)
+          image_url VARCHAR(300)
         );`);
 
       const ingredientsTablePromise = db.query(`
-          CREATE TABLE ingredients (
+        CREATE TABLE ingredients (
           ingredient_id SERIAL PRIMARY KEY,
           name VARCHAR(100)
         );`);
 
       return Promise.all([dishesTablePromise, ingredientsTablePromise]);
-    })
-    .then(() => {
-      return db.query(`
-        CREATE TABLE dish_ingredients (
-            dish_id INT,
-            ingredient_id INT,
-            FOREIGN KEY (dish_id) REFERENCES dishes(dish_id),
-            FOREIGN KEY (ingredient_id) REFERENCES ingredients(ingredient_id)
-          );
-          `);
     })
     .then(() => {
       const insertDishesQueryStr = format(
@@ -59,7 +44,7 @@ const seed = ({
             total_price,
             preparation_time,
             calories_per_serving,
-            image_url,
+            image
           }) => [
             dish_id,
             dish_name,
@@ -67,38 +52,37 @@ const seed = ({
             total_price,
             preparation_time,
             calories_per_serving,
-            image_url,
+            image
           ]
         )
       );
       const dishPromise = db.query(insertDishesQueryStr);
 
       const insertIngredientsQueryStr = format(
-        "INSERT INTO ingredients ( ingredient_id, name) VALUES %L;",
-        ingredientsData.map(({ ingredient_id, name }) => [
-          ingredient_id,
-          name,
-        ])
+        "INSERT INTO ingredients (ingredient_id, name) VALUES %L;",
+        ingredientsData.map(({ ingredient_id, name }) => [ingredient_id, name])
       );
       const ingredientsPromise = db.query(insertIngredientsQueryStr);
 
+      return Promise.all([dishPromise, ingredientsPromise]);
+    })
+    .then(() => {
+      return db.query(`
+        CREATE TABLE dish_ingredients (
+          dish_id INT,
+          ingredient_id INT,
+          FOREIGN KEY (dish_id) REFERENCES dishes(dish_id),
+          FOREIGN KEY (ingredient_id) REFERENCES ingredients(ingredient_id)
+        );
+      `);
+    })
+    .then(() => {
       const insertDishIngredientsQueryStr = format(
         `INSERT into dish_ingredients (dish_id, ingredient_id) VALUES %L;`,
-        ingredientsDataJunction.map(({ dish_id, ingredient_id }) => [
-          dish_id,
-          ingredient_id,
-        ])
+        ingredientsDataJunction.map(({ dish_id, ingredient_id }) => [dish_id, ingredient_id])
       );
 
-      const ingredientsDishJunctionPromise = db.query(
-        insertDishIngredientsQueryStr
-      );
-
-      return Promise.all([
-        dishPromise,
-        ingredientsPromise,
-        ingredientsDishJunctionPromise,
-      ]);
+      return db.query(insertDishIngredientsQueryStr);
     });
 };
 

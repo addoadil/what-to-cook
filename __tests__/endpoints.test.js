@@ -14,7 +14,7 @@ describe('GET /api/dishes', () => {
             .get('/api/dishes')
             .expect(200)
             .then(({ body }) => {
-                expect(body).toBe(Array.isArray(true));
+                expect(Array.isArray(body)).toBe(true);
                 expect(body).toHaveLength(10);
                 body.forEach((dish) => {
                     expect(dish).toHaveProperty('dish_id');
@@ -23,8 +23,25 @@ describe('GET /api/dishes', () => {
                     expect(dish).toHaveProperty('total_price');
                     expect(dish).toHaveProperty('preparation_time');
                     expect(dish).toHaveProperty('calories_per_serving');
-                    expect(dish).toHaveProperty('image');
+                    expect(dish).toHaveProperty('image_url');
                 });
+            });
+    });
+});
+
+describe('GET /api/search?name={dishName}', () => {
+    test('Should return a status of 200 with dish object when searched for specific dish', () => {
+        return request(app)
+            .get('/api/search?name=biryani')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body).toHaveProperty('dish_id');
+                expect(body).toHaveProperty('dish_name');
+                expect(body).toHaveProperty('description');
+                expect(body).toHaveProperty('total_price');
+                expect(body).toHaveProperty('preparation_time');
+                expect(body).toHaveProperty('calories_per_serving');
+                expect(body).toHaveProperty('image_url');
             });
     });
 });
