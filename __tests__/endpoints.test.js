@@ -46,6 +46,28 @@ describe('GET /api/search?name={dishName}', () => {
     });
 });
 
+describe('GET /api/search?name={dishName}', () => {
+    test('Should return a status of 404 with dish not found when dish is not in database', () => {
+        return request(app)
+            .get('/api/search?name=alarm')
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Not found');
+            });
+    });
+});
+
+describe('GET /api/search?name={dishName}', () => {
+    test('Should return a status of 400 msg bad request when dish is of invalid type', () => {
+        return request(app)
+            .get('/api/search?name=9877')
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Bad request');
+            });
+    });
+});
+
 afterAll(() => {
     db.end()
 });
